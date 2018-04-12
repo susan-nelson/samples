@@ -15,8 +15,8 @@ import java.util.stream.Stream;
 
 public class FileSamples {
 
-    final static String INPUT_FILE_PATH = "/com/susannelson/file.txt";
-    final static String OUTPUT_FILE_PATH = "/src/main/java/com/susannelson/sorted_file.txt";
+    private final static String INPUT_FILE_PATH = "/com/susannelson/file.txt";
+    private final static String OUTPUT_FILE_PATH = "/src/main/java/com/susannelson/sorted_file.txt";
 
     public void sortFileRecordsBySecondField() {
 
@@ -84,15 +84,14 @@ public class FileSamples {
     private List<String> readInputFile() {
 
         final List<String> fileLines = new ArrayList<>();
-        InputStream stream = null;
-        BufferedReader reader = null;
 
-        try {
-            stream = getClass().getResourceAsStream(INPUT_FILE_PATH);
-            reader = new BufferedReader(new InputStreamReader(stream));
+        try (InputStream stream = getClass().getResourceAsStream(INPUT_FILE_PATH);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+
             String line;
 
             while ((line = reader.readLine()) != null) {
+
                 if (StringUtils.isNotEmpty(line)) {
 
                     fileLines.add(line);
@@ -101,23 +100,6 @@ public class FileSamples {
         } catch (Exception e) {
 
             throw new RuntimeException("Not able to read file lines: " + e.getMessage());
-        } finally {
-
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    //ignore
-                }
-            }
-
-            if (stream != null) {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    //ignore
-                }
-            }
         }
 
         return fileLines;
@@ -125,15 +107,13 @@ public class FileSamples {
 
     private void writeSortedFile(Map<Integer, Set<String>> sortedLines) {
 
-        PrintWriter out = null;
+        String basePath = this.getModulePath("samples");
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(
+                new FileWriter(basePath + OUTPUT_FILE_PATH)))) {
 
-        try {
-            String basePath = this.getModulePath("Samples");
-            out = new PrintWriter(new BufferedWriter(new FileWriter(basePath + OUTPUT_FILE_PATH)));
+            for (Set<String> lines : sortedLines.values()) {
 
-            for (Set<String> lines: sortedLines.values()) {
-
-                for (String line: lines) {
+                for (String line : lines) {
 
                     out.println(line);
                 }
@@ -141,11 +121,6 @@ public class FileSamples {
         } catch (Exception e) {
 
             throw new RuntimeException("Not able to write sorted lines: " + e.getMessage());
-        } finally {
-
-            if (out != null) {
-                out.close();
-            }
         }
     }
 
@@ -157,7 +132,8 @@ public class FileSamples {
      * 2. trunk/&lt;module&gt; (within Eclipse) <br/>
      * 3. trunk/build (within Ant build)
      */
-    protected String getModulePath(String module) {
+    private String getModulePath(String module) {
+
         String rootDir = System.getProperty("user.dir");
         String moduleRoot = rootDir;
         File file;
